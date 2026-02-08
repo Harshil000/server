@@ -26,7 +26,7 @@ authRouter.post("/register" , async (req , res) => {
 
 authRouter.post('/protected' , (req , res) => {
     console.log(req.cookies);
-    res.status(200).json({message : "This is a protected route"});
+    res.status(200).json({message : "This is a protected route !"});
 })
 
 authRouter.post('/login' , async (req , res) => {

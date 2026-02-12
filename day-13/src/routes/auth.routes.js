@@ -29,6 +29,20 @@ authRouter.post('/protected' , (req , res) => {
     res.status(200).json({message : "This is a protected route"});
 })
 
+authRouter.get('/get-user' , async (req , res) => {
+    const token = req.cookies.jwt_token;
+    if (!token) {
+        return res.status(401).json({message : "Unauthorized"});
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await userModel.findById(decoded.id);
+        res.status(200).json({message : "User found", user});
+    } catch (error) {
+        res.status(401).json({message : "Invalid token"});
+    }
+})
+
 authRouter.post('/login' , async (req , res) => {
     const {email , password} = req.body;
     const user = await userModel.findOne({email});

@@ -16,7 +16,7 @@ authRouter.post("/register" , async (req , res) => {
 
     try {
         const user = await userModel.create({name , email , password : crypto.createHash('md5').update(password).digest("hex")});
-        const token = jwt.sign({id : user._id , email : email}, process.env.JWT_SECRET)
+        const token = jwt.sign({id : user._id , email : email}, process.env.JWT_SECRET , {expiresIn : "1h"});
         res.cookie("jwt_token" , token)
         res.status(201).json({message : "User registered successfully" , token});
     } catch (error) {

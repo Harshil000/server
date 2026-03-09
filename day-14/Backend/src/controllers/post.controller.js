@@ -11,6 +11,11 @@ const client = new ImageKit({
 async function createPostController(req, res) {
     const userId = req.user.id;
 
+    if (!req.file) {
+        return res.status(400).json({ msg: "no file uploaded" })
+    }
+
+
     const files = await client.files.upload({
         file: await toFile(Buffer.from(req.file.buffer), 'file'),
         fileName: req.file.originalname,
@@ -103,4 +108,4 @@ async function dislikePostController(req, res) {
     res.status(400).json({ msg: "you have not liked this post" })
 }
 
-module.exports = { createPostController, getPostsController, getPostDetailController, likePostController , dislikePostController }
+module.exports = { createPostController, getPostsController, getPostDetailController, likePostController, dislikePostController }

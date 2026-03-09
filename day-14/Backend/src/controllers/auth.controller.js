@@ -20,11 +20,16 @@ async function registerController(req, res) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const files = await client.files.upload({
-        file: await toFile(Buffer.from(req.file.buffer), 'file'),
-        fileName: req.file.originalname,
-        folder: '/usersProfilePic'
-    })
+    let profile_image = null
+    
+    if (req.file) {
+        const files = await client.files.upload({
+            file: await toFile(Buffer.from(req.file.buffer), 'file'),
+            fileName: req.file.originalname,
+            folder: '/usersProfilePic'
+        })
+        profile_image = files.url
+    }
 
     const createdUser = await userModel.create({
         name,
@@ -32,7 +37,7 @@ async function registerController(req, res) {
         email,
         password: hashedPassword,
         bio,
-        profile_image: files.url
+        profile_image
     })
 
     const token = jwt.sign({ id: createdUser._id, email: createdUser.email, userName: createdUser.userName }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' })
@@ -42,7 +47,7 @@ async function registerController(req, res) {
 
 async function loginController(req, res) {
     const { email, password, userName } = req.body
-
+    
     const user = await userModel.findOne({ $or: [{ email }, { userName }] })
 
     if (!user) {
@@ -60,4 +65,10 @@ async function loginController(req, res) {
     res.status(200).json({ msg: "login successful", user: { name: user.name, userName: user.userName, email: user.email, bio: user.bio, profile_image: user.profile_image }, token })
 }
 
-module.exports = { registerController, loginController }
+async function getMeController(req , res){
+    let user = req.user
+    const userWithoutPassword = await userModel.findById(user.id).select('-password')
+    res.status(200).json({user : userWithoutPassword})
+}
+
+module.exports = { registerController, loginController , getMeController }

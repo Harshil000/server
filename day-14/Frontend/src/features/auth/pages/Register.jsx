@@ -1,78 +1,52 @@
 import '../styles/form.scss'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import axios from 'axios'
+import { useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useForm } from '../hooks/useForm'
+import PasswordInput from '../components/PasswordInput'
+import ErrorMessage from '../components/ErrorMessage'
 
 const Register = () => {
-  const [formData, setFormData] = useState({
+  const navigate = useNavigate()
+  const fileInputRef = useRef(null)
+  
+  // Use custom form hook for state management (Hooks Layer)
+  const { formData, handleChange, resetForm } = useForm({
     name: '',
     username: '',
     email: '',
     password: '',
     bio: ''
   })
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+  // Use auth hook for business logic (Hooks Layer)
+  const { handleRegister, loading, error } = useAuth()
 
-  const handleRegister = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
-    setLoading(true)
+    
+    // Get file reference from DOM (UI responsibility)
+    const profilePicFile = fileInputRef.current?.files[0] || null
 
     try {
-      const data = new FormData()
-      data.append('name', formData.name)
-      data.append('userName', formData.username)
-      data.append('email', formData.email)
-      data.append('password', formData.password)
-      data.append('bio', formData.bio)
-
-      const fileInput = e.target.profilePic
-      if (fileInput.files[0]) {
-        data.append('profilePic', fileInput.files[0])
-      }
-
-      const response = await axios.post(
-        'http://localhost:3000/api/auth/register',
-        data,
-        { withCredentials: true }
-      )
-
-      setSuccess(response.data.msg || 'Registration successful!')
-      console.log('Registration successful:', response.data)
-
-      // Reset form
-      setFormData({ name: '', username: '', email: '', password: '', bio: '' })
+      // Hook handles FormData construction (business logic)
+      await handleRegister(formData, profilePicFile)
+      console.log('Registration successful')
+      navigate('/login')
+      resetForm()
       e.target.reset()
-
-    } catch (error) {
-      if (error.response) {
-        setError(error.response.data.msg || 'Registration failed')
-      } else if (error.request) {
-        setError('Network error. Please try again.')
-      } else {
-        setError('Something went wrong')
-      }
-    } finally {
-      setLoading(false)
+    } catch (err) {
+      console.error('Registration failed:', err)
     }
   }
 
   return (
     <main>
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      <ErrorMessage error={error} />
       <div className="form-container">
         <h1>Register</h1>
 
-        <form onSubmit={handleRegister}>
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
             name="name"
@@ -103,20 +77,14 @@ const Register = () => {
             required
           />
 
-          <div className="passContainer">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              disabled={loading}
-              required
-            />
-            <span className="hide-show" onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? "Hide" : "Show"}
-            </span>
-          </div>
+          <PasswordInput
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            disabled={loading}
+            required
+          />
 
           <textarea
             name="bio"
@@ -130,6 +98,7 @@ const Register = () => {
             type="file"
             name="profilePic"
             accept="image/*"
+            ref={fileInputRef}
             disabled={loading}
           />
 

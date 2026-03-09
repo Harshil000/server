@@ -1,62 +1,47 @@
 import '../styles/form.scss'
-import { useState } from 'react'
-import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useForm } from '../hooks/useForm'
+import PasswordInput from '../components/PasswordInput'
+import ErrorMessage from '../components/ErrorMessage'
 
 const Login = () => {
-
   const navigate = useNavigate()
 
-  const [formData, setFormData] = useState({
-    name: '',
+  // Use custom form hook for state management (Hooks Layer)
+  const { formData, handleChange } = useForm({
+    userName: '',
     email: '',
     password: ''
   })
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+  // Use auth hook for business logic (Hooks Layer)
+  const { handleLogin, loading, error } = useAuth()
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
 
     try {
-      const response = await axios.post(
-        'http://localhost:3000/api/auth/login',
-        formData,
-        { withCredentials: true }
-      )
+      await handleLogin(formData)
+      console.log('Login successful')
       navigate('/')
-    } catch (error) {
-      if (error.response) {
-        setError(error.response.data.msg || 'Login failed')
-      } else if (error.request) {
-        setError('Network error. Please try again.')
-      } else {
-        setError('Something went wrong')
-      }
-    } finally {
-      setLoading(false)
+    } catch (err) {
+      console.error('Login failed:', err)
     }
   }
 
   return (
     <main>
-      {error && <div className="error-message">{error}</div>}
+      <ErrorMessage error={error} />
       <div className="form-container">
         <h1>Login</h1>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
-            name="name"
+            name="userName"
             placeholder="Username"
-            value={formData.name}
+            value={formData.userName}
             onChange={handleChange}
             disabled={loading}
             required
@@ -72,20 +57,14 @@ const Login = () => {
             required
           />
 
-          <div className="passContainer">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              disabled={loading}
-              required
-            />
-            <span className="hide-show" onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? "Hide" : "Show"}
-            </span>
-          </div>
+          <PasswordInput
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            disabled={loading}
+            required
+          />
 
           <button type="submit" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}

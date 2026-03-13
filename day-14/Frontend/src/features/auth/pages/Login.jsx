@@ -31,7 +31,7 @@ const Login = () => {
   }
 
   return (
-    <main>
+    <main className='login-register-page'>
       <ErrorMessage error={error} />
       <div className="form-container">
         <h1>Login</h1>

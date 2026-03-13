@@ -8,7 +8,14 @@ const postRouter = express.Router()
 
 postRouter.post('/', upload.single('image'), identifyUser, postController.createPostController)
 postRouter.get('/', identifyUser, postController.getPostsController)
-postRouter.get('/:id', identifyUser, postController.getPostDetailController)
+
+/**
+ * @route get /api/posts/feed
+ * @desc Get personalized feed of posts from followed users
+ * @access Private (Authenticated users only)
+ */
+postRouter.get('/feed', identifyUser, postController.getFeedController)
+
 /**
 * @route get /api/posts/like/:id
 * @desc Like a post by ID
@@ -30,5 +37,8 @@ postRouter.get('/like/:id', identifyUser, postController.likePostController)
  * @throws {400} If not liked yet
  */
 postRouter.get('/dislike/:id', identifyUser, postController.dislikePostController) 
+
+// ⚠️ Keep dynamic :id route LAST to avoid catching specific routes above
+postRouter.get('/:id', identifyUser, postController.getPostDetailController)
 
 module.exports = postRouter;

@@ -108,4 +108,27 @@ async function dislikePostController(req, res) {
     res.status(400).json({ msg: "you have not liked this post" })
 }
 
-module.exports = { createPostController, getPostsController, getPostDetailController, likePostController, dislikePostController }
+async function getFeedController(req, res) {
+    const user = req.user
+    if (!user) {
+        return res.status(404).json({ msg: "user not found" })
+    }
+
+    const allPosts = await postModel.find({ user: { $ne: user.id }}).populate("user", "-password -email -bio").lean()
+    
+    // Wait for all promises to resolve
+    const postsWithLikes = await Promise.all(
+        allPosts.map(async (post) => {
+            const isLiked = await likeModel.findOne({
+                postId: post._id,
+                userName: user.userName,
+            })
+            post.isLiked = Boolean(isLiked)
+            return post
+        })
+    )
+
+    res.status(200).json({ msg: "feed fetched successfully", posts: postsWithLikes })
+}
+
+module.exports = { createPostController, getPostsController, getPostDetailController, likePostController, dislikePostController, getFeedController }

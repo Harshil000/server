@@ -41,7 +41,7 @@ const Register = () => {
   }
 
   return (
-    <main>
+    <main className='login-register-page'>
       <ErrorMessage error={error} />
       <div className="form-container">
         <h1>Register</h1>

@@ -10,8 +10,8 @@ const Post = (props) => {
         <img src={imgInfo.imgUrl} alt="Post" />
         <div className="actions">
             <div className="left">
-                <button className="action-btn like">
-                    <i className="ri-heart-line"></i>
+                <button className={`action-btn like ${imgInfo.isLiked ? 'liked' : ''}`}>
+                    <i className={imgInfo.isLiked ? 'ri-heart-fill' : 'ri-heart-line'}></i>
                 </button>
                 <button className="action-btn comment">
                     <i className="ri-chat-3-line"></i>

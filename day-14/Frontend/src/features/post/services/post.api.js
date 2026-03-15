@@ -15,3 +15,13 @@ export async function getFeed() {
         throw new Error (error.response?.data?.msg || 'Failed to fetch feed')
     }
 }
+
+export async function createPost(formData) {
+    try {
+        const response = await api.post('/', formData)
+        console.log('API response:', response.status);
+        return response.status
+    } catch (error) {
+        throw new Error (error.response?.data?.msg || 'Failed to create post')
+    }
+}

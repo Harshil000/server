@@ -1,19 +1,18 @@
-import { getFeed ,createPost } from '../services/post.api';
+import { getFeed, createPost, LikePost , DislikePost } from '../services/post.api';
 import { postContext } from '../post.context';
-import { useContext , useState } from 'react';
+import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export const usePost = () => {
     const navigate = useNavigate();
     const context = useContext(postContext);
-    const [error , setError] = useState('');
-    const {loading , setLoading , post , setPost , feed , setFeed} = context;
-    
+    const [error, setError] = useState('');
+    const { loading, setLoading, post, setPost, feed, setFeed } = context;
+
     const handleGetFeed = async () => {
         setLoading(true);
         try {
             const data = await getFeed();
-            console.log(data.posts)
             setFeed(data.posts);
         } catch (error) {
             console.error('Error fetching feed:', error);
@@ -22,7 +21,7 @@ export const usePost = () => {
         }
     }
 
-    const handleCreatePost = async (caption , imageFile) => {
+    const handleCreatePost = async (caption, imageFile) => {
         setLoading(true);
         setError('');
         try {
@@ -39,5 +38,21 @@ export const usePost = () => {
             setLoading(false);
         }
     }
-    return {loading, post, feed, error,setError , handleGetFeed, handleCreatePost};
+
+    const handleLikePost = async (postId, isLiked) => {
+        if (isLiked) {
+            try {
+                await DislikePost(postId);
+            } catch (error) {
+                console.error('Error unliking post:', error);
+            }
+        } else {
+            try {
+                await LikePost(postId);
+            } catch (error) {
+                console.error('Error liking post:', error);
+            }
+        }
+    }
+    return { loading, post, feed, error, setError, handleGetFeed, handleCreatePost, handleLikePost };
 }

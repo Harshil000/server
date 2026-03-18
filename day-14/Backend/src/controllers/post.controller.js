@@ -114,8 +114,8 @@ async function getFeedController(req, res) {
         return res.status(404).json({ msg: "user not found" })
     }
 
-    const allPosts = await postModel.find({ user: { $ne: user.id }}).populate("user", "-password -email -bio").lean()
-    
+    const allPosts = await postModel.find({ user: { $ne: user.id } }).populate("user", "-password -email -bio").lean()
+
     // Wait for all promises to resolve
     const postsWithLikes = await Promise.all(
         allPosts.map(async (post) => {
@@ -131,4 +131,12 @@ async function getFeedController(req, res) {
     res.status(200).json({ msg: "feed fetched successfully", posts: postsWithLikes })
 }
 
-module.exports = { createPostController, getPostsController, getPostDetailController, likePostController, dislikePostController, getFeedController }
+async function getMyPostsController(req, res) {
+    const user = req.user
+    const userId = user?.id || user?._id
+
+    const myPosts = await postModel.find({ user: userId })
+    res.status(200).json({ msg: "my posts fetched successfully", posts: myPosts })
+}
+
+module.exports = { createPostController, getPostsController, getPostDetailController, likePostController, dislikePostController, getFeedController , getMyPostsController }

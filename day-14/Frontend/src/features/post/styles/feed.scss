@@ -7,14 +7,213 @@
         min-height: 100vh;
 
         .feed {
-            max-width: 500px;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            .sidebar{
+                position: fixed;
+                right: 0;
+                bottom: 0;
+                width: 25%;
+                height: calc(100% - 4rem);
+                background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+                padding: 1rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.7rem;
+                border-left: 1px solid #23314b;
+                box-shadow: -14px 0 30px rgba(2, 6, 23, 0.35);
+                color: #e2e8f0;
+                overflow-y: auto;
+    
+                .profile , .followers , .otherUsers, .requests {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.8rem;
+                    border: 1px solid #25324c;
+                    border-radius: 14px;
+                    background: linear-gradient(180deg, #162033 0%, #111a2b 100%);
+                    padding: 0.85rem;
+                    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+                }
+
+                .profile h3,
+                .followers h3,
+                .requests h3,
+                .otherUsers h3 {
+                    margin: 0;
+                    font-size: 0.78rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    color: #c6d4ea;
+                }
+
+                .profile > p {
+                    margin: 0;
+                    color: #94a3b8;
+                    font-size: 0.9rem;
+                }
+
+                .userInfo{
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-start;
+                    gap: 0.7rem;
+    
+                    img {
+                        width: 48px;
+                        height: 48px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        border: 2px solid #304264;
+                        background: #1f2937;
+                    }
+    
+                    .infoText {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.15rem;
+                        min-width: 0;
+
+                        p {
+                            margin: 0;
+                        }
+
+                        p:first-child {
+                            font-size: 0.95rem;
+                            font-weight: 600;
+                            color: #f8fafc;
+                        }
+
+                        p:last-child {
+                            font-size: 0.8rem;
+                            color: #93a6c4;
+                        }
+                    }
+
+                    .followBtn {
+                        margin-left: auto;
+                        border: 1px solid #3b4e72;
+                        background: #233a62;
+                        color: #e8effc;
+                        border-radius: 999px;
+                        padding: 0.24rem 0.58rem;
+                        font-size: 0.68rem;
+                        font-weight: 600;
+                        cursor: pointer;
+
+                        &.following {
+                            background: transparent;
+                            color: #bfd0ea;
+                            border-color: #516487;
+                        }
+
+                        &:disabled {
+                            opacity: 0.65;
+                            cursor: not-allowed;
+                        }
+                    }
+                }
+
+                .followers,
+                .requests,
+                .otherUsers {
+                    min-height: 170px;
+                    max-height: 235px;
+                    overflow-y: auto;
+                }
+
+                .requestCard {
+                    align-items: flex-start;
+                }
+
+                .requestActions {
+                    margin-left: auto;
+                    display: flex;
+                    gap: 0.35rem;
+                }
+
+                .requestBtn {
+                    border: 1px solid #40557c;
+                    border-radius: 999px;
+                    font-size: 0.68rem;
+                    font-weight: 600;
+                    padding: 0.2rem 0.55rem;
+                    cursor: pointer;
+                    color: #e8effc;
+
+                    &:disabled {
+                        opacity: 0.65;
+                        cursor: not-allowed;
+                    }
+
+                    &.accept {
+                        background: #1f8f5a;
+                        border-color: #1f8f5a;
+                    }
+
+                    &.reject {
+                        background: #7c2d3b;
+                        border-color: #7c2d3b;
+                    }
+                }
+    
+                .idInfo{
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 0.45rem;
+    
+                    .infoHolder{
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.15rem;
+                        border: 1px solid #314161;
+                        border-radius: 10px;
+                        background: #182439;
+                        padding: 0.42rem 0.25rem;
+
+                        h4,
+                        p {
+                            margin: 0;
+                        }
+
+                        h4 {
+                            font-size: 0.64rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.06em;
+                            color: #8ea5c7;
+                        }
+
+                        p {
+                            font-size: 0.92rem;
+                            font-weight: 700;
+                            color: #f8fafc;
+                        }
+                    }
+                }
+
+                .followers,
+                .requests,
+                .otherUsers {
+                    p {
+                        margin: 0;
+                        color: #8ea5c7;
+                        font-size: 0.84rem;
+                    }
+                }
+            }
 
             .posts {
-                width: 100%;
+                max-width: 500px;
                 display: flex;
                 flex-direction: column;
                 gap: 2rem;
+                // margin-left: 15rem;
 
                 .post {
                     width: 100%;

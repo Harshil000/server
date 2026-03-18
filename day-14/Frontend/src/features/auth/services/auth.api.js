@@ -40,12 +40,3 @@ export async function login(formData) {
         }
     }
 }
-
-export async function getme() {
-    try {
-        const res = await api.get('/getMe')
-        return res.data
-    } catch (error) {
-        throw error
-    }
-}

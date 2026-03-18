@@ -38,6 +38,16 @@ postRouter.get('/like/:id', identifyUser, postController.likePostController)
  */
 postRouter.get('/dislike/:id', identifyUser, postController.dislikePostController) 
 
+/**
+ * @route get /api/posts/myPosts
+ * @desc Get posts created by the authenticated user
+ * @access Private (Authenticated users only)
+ * @returns {Array} List of user's posts
+ * @throws {404} If user not found
+
+ */
+postRouter.get('/myPosts' , identifyUser , postController.getMyPostsController)
+
 // ⚠️ Keep dynamic :id route LAST to avoid catching specific routes above
 postRouter.get('/:id', identifyUser, postController.getPostDetailController)
 

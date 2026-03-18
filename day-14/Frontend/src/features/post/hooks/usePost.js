@@ -54,5 +54,6 @@ export const usePost = () => {
             }
         }
     }
+
     return { loading, post, feed, error, setError, handleGetFeed, handleCreatePost, handleLikePost };
 }

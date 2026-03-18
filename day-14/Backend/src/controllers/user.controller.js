@@ -1,82 +1,271 @@
 const followModel = require('../models/follow.model')
 const userModel = require('../models/user.model')
 
+async function attachOutgoingFollowStatus(ownUsername, users) {
+    if (!users.length) {
+        return []
+    }
+
+    const usernames = users.map((user) => user.userName)
+    const outgoingDocs = await followModel
+        .find({ follower: ownUsername, following: { $in: usernames } })
+        .select('following status')
+        .lean()
+
+    const statusByUsername = new Map(
+        outgoingDocs.map((doc) => [doc.following, doc.status])
+    )
+
+    return users.map((user) => {
+        const plainUser = typeof user.toObject === 'function' ? user.toObject() : user
+        return {
+            ...plainUser,
+            followStatus: statusByUsername.get(plainUser.userName) || 'none',
+        }
+    })
+}
+
 async function followUserController(req, res) {
-    const username = req.user.userName
-    const followinUserName = req.params.username
+    const ownUsername = req.user.userName
+    const targetUsername = req.params.username
 
-    const followingUser = await userModel.findOne({ userName: followinUserName })
-
-    if (!followingUser) {
-        return res.status(404).json({ msg: "user to follow not found" })
+    if (targetUsername === ownUsername) {
+        return res.status(400).json({ msg: 'you cannot follow yourself' })
     }
 
-    const followExist = await followModel.findOne({ follower: username, following: followingUser.userName })
+    const targetUser = await userModel.findOne({ userName: targetUsername }).select('_id')
 
-    if (followExist) {
-        return res.status(400).json({ msg: `you are already following ${followinUserName}` })
+    if (!targetUser) {
+        return res.status(404).json({ msg: 'user to follow not found' })
     }
 
-    if (followingUser.userName === username) {
-        return res.status(400).json({ msg: "you cannot follow yourself" })
+    const followDoc = await followModel.findOne({ follower: ownUsername, following: targetUsername })
+
+    if (!followDoc) {
+        await followModel.create({ follower: ownUsername, following: targetUsername, status: 'pending' })
+        return res.status(200).json({ msg: `follow request sent to ${targetUsername}`, followStatus: 'pending' })
     }
 
-    await followModel.create({ follower: username, following: followingUser.userName })
-    res.status(200).json({ msg: `you are now following ${followinUserName}` })
+    if (followDoc.status === 'accepted') {
+        return res.status(400).json({ msg: `you are already following ${targetUsername}`, followStatus: 'accepted' })
+    }
+
+    if (followDoc.status === 'pending') {
+        return res.status(400).json({ msg: `follow request already pending for ${targetUsername}`, followStatus: 'pending' })
+    }
+
+    followDoc.status = 'pending'
+    await followDoc.save()
+
+    return res.status(200).json({ msg: `follow request re-sent to ${targetUsername}`, followStatus: 'pending' })
 }
 
 async function unfollowUserController(req, res) {
-    const username = req.user.userName
-    const followinUserName = req.params.username
+    const ownUsername = req.user.userName
+    const targetUsername = req.params.username
 
-    const isFollowing = await followModel.findOne({ follower: username, following: followinUserName })
-
-    if (!isFollowing) {
-        return res.status(400).json({ msg: `you are not following ${followinUserName}` })
+    if (targetUsername === ownUsername) {
+        return res.status(400).json({ msg: 'you cannot unfollow yourself' })
     }
 
-    await followModel.findOneAndDelete({ follower: username, following: followinUserName })
-    res.status(200).json({ msg: `you have unfollowed ${followinUserName}` })
+    const deleted = await followModel.findOneAndDelete({ follower: ownUsername, following: targetUsername })
+
+    if (!deleted) {
+        return res.status(400).json({ msg: `you do not have a follow relationship with ${targetUsername}` })
+    }
+
+    return res.status(200).json({ msg: `follow removed for ${targetUsername}`, followStatus: 'none' })
 }
 
 async function getFollowersController(req, res) {
-    const ownusername = req.user.userName
-    const allFollowers = await followModel.find({ following: ownusername })
-    if (allFollowers.length === 0) {
-        return res.status(404).json({ msg: "nobody follows you" })
-    }
-    res.status(200).json({ msg: "Here is list of all person following you", allFollowers })
+    const ownUsername = req.user.userName
+
+    const followDocs = await followModel
+        .find({ following: ownUsername, status: 'accepted' })
+        .select('follower')
+        .lean()
+
+    const followerUsernames = followDocs.map((doc) => doc.follower)
+    const followers = await userModel
+        .find({ userName: { $in: followerUsernames } })
+        .select('name userName profile_image')
+        .lean()
+
+    const followersWithStatus = await attachOutgoingFollowStatus(ownUsername, followers)
+
+    return res.status(200).json({ msg: 'followers fetched successfully', followers: followersWithStatus })
 }
 
 async function changeFollowerStatusController(req, res) {
-    const ownusername = req.user.userName
+    const ownUsername = req.user.userName
     const { status, username } = req.params
 
-    const followRequest = await followModel.findOne({ follower: username, following: ownusername })
+    if (!['accept', 'reject'].includes(status)) {
+        return res.status(400).json({ msg: 'invalid status' })
+    }
+
+    const followRequest = await followModel.findOne({ follower: username, following: ownUsername })
 
     if (!followRequest) {
-        return res.status(404).json({ msg: "follow request not found" })
+        return res.status(404).json({ msg: 'follow request not found' })
     }
 
-    if (status === "reject"){
-        if (followRequest.status === "rejected") {
-            return res.status(400).json({ msg: "follow request already rejected" })
-        }
-        followRequest.status = "rejected"
-        await followRequest.save()
-        return res.status(200).json({ msg: `you have rejected ${username}'s follow request` })
+    if (followRequest.status !== 'pending') {
+        return res.status(400).json({ msg: `only pending requests can be ${status}ed` })
     }
 
-    if (status === "accept") {
-        if (followRequest.status === "accepted") {
-            return res.status(400).json({ msg: "follow request already accepted" })
-        }
-        followRequest.status = "accepted"
-        await followRequest.save()
-        return res.status(200).json({ msg: `you have accepted ${username}'s follow request` })
-    }
+    followRequest.status = status === 'accept' ? 'accepted' : 'rejected'
+    await followRequest.save()
 
-    res.status(400).json({ msg: "invalid status" })
+    return res.status(200).json({
+        msg: `you have ${status === 'accept' ? 'accepted' : 'rejected'} ${username}'s follow request`,
+        requestStatus: followRequest.status,
+    })
 }
 
-module.exports = { followUserController, unfollowUserController, getFollowersController, changeFollowerStatusController }
+async function getFollowRequestsController(req, res) {
+    const ownUsername = req.user.userName
+
+    const requests = await followModel
+        .find({ following: ownUsername, status: 'pending' })
+        .select('follower createdAt')
+        .sort({ createdAt: -1 })
+        .lean()
+
+    const requestUsernames = requests.map((doc) => doc.follower)
+    const requestUsers = await userModel
+        .find({ userName: { $in: requestUsernames } })
+        .select('name userName profile_image')
+        .lean()
+
+    const requestUsersByUsername = new Map(
+        requestUsers.map((user) => [user.userName, user])
+    )
+
+    const followRequests = requests
+        .map((doc) => {
+            const user = requestUsersByUsername.get(doc.follower)
+            if (!user) {
+                return null
+            }
+
+            return {
+                ...user,
+                requestStatus: 'pending',
+                requestedAt: doc.createdAt,
+            }
+        })
+        .filter(Boolean)
+
+    return res.status(200).json({ msg: 'follow requests fetched successfully', followRequests })
+}
+
+async function getOtherUsersController(req, res) {
+    const ownUsername = req.user.userName
+
+    const followerDocs = await followModel
+        .find({ following: ownUsername, status: 'accepted' })
+        .select('follower')
+        .lean()
+
+    const followerUsernames = followerDocs.map((doc) => doc.follower)
+
+    const otherUsers = await userModel
+        .find({
+            userName: { $nin: [ownUsername, ...followerUsernames] },
+        })
+        .select('name userName profile_image')
+        .lean()
+
+    const otherUsersWithStatus = await attachOutgoingFollowStatus(ownUsername, otherUsers)
+
+    return res.status(200).json({ msg: 'other users fetched successfully', otherUsers: otherUsersWithStatus })
+}
+
+async function getMeController(req , res){
+    const ownUsername = req.user.userName
+    const userId = req.user.id
+
+    const userWithoutPassword = await userModel.findById(userId).select('-password').lean()
+
+    if (!userWithoutPassword) {
+        return res.status(404).json({ msg: 'user not found' })
+    }
+
+    const followerDocs = await followModel
+        .find({ following: ownUsername, status: 'accepted' })
+        .select('follower')
+        .lean()
+
+    const followerUsernames = followerDocs.map((doc) => doc.follower)
+    const followers = await userModel
+        .find({ userName: { $in: followerUsernames } })
+        .select('name userName profile_image')
+        .lean()
+
+    const followersWithStatus = await attachOutgoingFollowStatus(ownUsername, followers)
+
+    const otherUsers = await userModel
+        .find({ userName: { $nin: [ownUsername, ...followerUsernames] } })
+        .select('name userName profile_image')
+        .lean()
+
+    const otherUsersWithStatus = await attachOutgoingFollowStatus(ownUsername, otherUsers)
+
+    const pendingIncomingDocs = await followModel
+        .find({ following: ownUsername, status: 'pending' })
+        .select('follower createdAt')
+        .sort({ createdAt: -1 })
+        .lean()
+
+    const pendingIncomingUsernames = pendingIncomingDocs.map((doc) => doc.follower)
+    const pendingIncomingUsers = await userModel
+        .find({ userName: { $in: pendingIncomingUsernames } })
+        .select('name userName profile_image')
+        .lean()
+
+    const pendingUsersByUsername = new Map(
+        pendingIncomingUsers.map((item) => [item.userName, item])
+    )
+
+    const followRequests = pendingIncomingDocs
+        .map((doc) => {
+            const user = pendingUsersByUsername.get(doc.follower)
+            if (!user) {
+                return null
+            }
+
+            return {
+                ...user,
+                requestStatus: 'pending',
+                requestedAt: doc.createdAt,
+            }
+        })
+        .filter(Boolean)
+
+    const followingCount = await followModel.countDocuments({
+        follower: ownUsername,
+        status: 'accepted',
+    })
+
+    return res.status(200).json({
+        user: userWithoutPassword,
+        followers: followersWithStatus,
+        otherUsers: otherUsersWithStatus,
+        followRequests,
+        counts: {
+            followers: followersWithStatus.length,
+            following: followingCount,
+        },
+    })
+}
+
+module.exports = {
+    followUserController,
+    unfollowUserController,
+    getFollowersController,
+    getOtherUsersController,
+    changeFollowerStatusController,
+    getFollowRequestsController,
+    getMeController,
+}

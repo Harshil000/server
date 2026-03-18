@@ -65,10 +65,6 @@ async function loginController(req, res) {
     res.status(200).json({ msg: "login successful", user: { name: user.name, userName: user.userName, email: user.email, bio: user.bio, profile_image: user.profile_image }, token })
 }
 
-async function getMeController(req , res){
-    let user = req.user
-    const userWithoutPassword = await userModel.findById(user.id).select('-password')
-    res.status(200).json({user : userWithoutPassword})
-}
 
-module.exports = { registerController, loginController , getMeController }
+
+module.exports = { registerController, loginController }

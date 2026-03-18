@@ -3,14 +3,15 @@ import { usePost } from '../hooks/usePost'
 import { useEffect } from 'react'
 import Post from '../components/Post'
 import Navbar from '../components/Navbar'
+import Sidebar from '../components/Sidebar'
 
 const Feed = () => {
 
-    const {loading, post, feed, handleGetFeed} = usePost()
+    const { loading, post, feed, handleGetFeed } = usePost()
 
     useEffect(() => {
         handleGetFeed()
-    },[])
+    }, [])
 
     if (loading || !feed) {
         return <div className="feed-page"><p>Loading feed...</p></div>
@@ -20,10 +21,11 @@ const Feed = () => {
         <main className='feed-page'>
             <Navbar />
             <div className="feed">
+                <Sidebar />
                 <div className="posts">
 
                     {feed.map((post) => {
-                        return <Post key={post._id} values={{imgInfo : {caption : post.caption , imgUrl : post.imgUrl , isLiked : post.isLiked , id : post._id} , user : post.user}}/>
+                        return <Post key={post._id} values={{ imgInfo: { caption: post.caption, imgUrl: post.imgUrl, isLiked: post.isLiked, id: post._id }, user: post.user }} />
                     })}
 
                     <div className="post">

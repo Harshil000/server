@@ -27,7 +27,10 @@ userRouter.get('/follow/:username', identifyUser, userController.followUserContr
 //for post we also add @body for things we ask in req.body
 userRouter.get('/unfollow/:username', identifyUser, userController.unfollowUserController)
 
-userRouter.get('/followRequests', identifyUser, userController.getFollowersController)
+userRouter.get('/allFollowers', identifyUser, userController.getFollowersController)
+userRouter.get('/getOtherUsers', identifyUser, userController.getOtherUsersController)
 userRouter.get('/changeFollowerStatus/:username/:status', identifyUser, userController.changeFollowerStatusController)
+userRouter.get('/followRequests', identifyUser, userController.getFollowRequestsController)
+userRouter.get('/getMe', identifyUser, userController.getMeController)
 
 module.exports = userRouter;

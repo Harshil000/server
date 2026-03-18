@@ -8,6 +8,5 @@ const authRoute = express.Router()
 
 authRoute.post('/register', upload.single('profilePic'), authController.registerController)
 authRoute.post('/login', authController.loginController)
-authRoute.get('/getMe', identifyUser, authController.getMeController)
 
 module.exports = authRoute;

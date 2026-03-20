@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Post from '../components/Post'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
+import FollowRequestsDock from '../components/FollowRequestsDock'
 
 const Feed = () => {
 
@@ -21,6 +22,7 @@ const Feed = () => {
         <main className='feed-page'>
             <Navbar />
             <div className="feed">
+                <FollowRequestsDock />
                 <Sidebar />
                 <div className="posts">
 

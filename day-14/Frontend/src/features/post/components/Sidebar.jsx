@@ -2,16 +2,14 @@ import { useEffect, useMemo, useState } from "react"
 import { useUser } from "../hooks/useUser";
 
 const Sidebar = () => {
-    const { getMe, handleFollowUser, handleUnfollowUser, handleFollowRequestAction } = useUser();
+    const { getMe, handleFollowUser, handleUnfollowUser } = useUser();
     const [profile, setProfile] = useState(null);
     const [myPosts, setMyPosts] = useState([]);
     const [profileLoading, setProfileLoading] = useState(true);
     const [followers, setFollowers] = useState([]);
     const [otherUsers, setOtherUsers] = useState([]);
-    const [followRequests, setFollowRequests] = useState([]);
     const [counts, setCounts] = useState({ followers: 0, following: 0 });
     const [buttonLoading, setButtonLoading] = useState({});
-    const [requestLoading, setRequestLoading] = useState({});
 
     const safeFollowersCount = useMemo(() => counts.followers ?? followers.length, [counts, followers.length]);
     const safeFollowingCount = useMemo(() => counts.following ?? 0, [counts]);
@@ -22,7 +20,6 @@ const Sidebar = () => {
         setMyPosts(res?.posts || []);
         setFollowers(res?.followers || []);
         setOtherUsers(res?.otherUsers || []);
-        setFollowRequests(res?.followRequests || []);
         setCounts(res?.counts || { followers: 0, following: 0 });
     };
 
@@ -83,20 +80,6 @@ const Sidebar = () => {
         }
     };
 
-    const onRequestAction = async (username, status) => {
-        const key = `${username}-${status}`;
-        setRequestLoading((prev) => ({ ...prev, [key]: true }));
-
-        try {
-            await handleFollowRequestAction(username, status);
-            await fetchSidebarData();
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setRequestLoading((prev) => ({ ...prev, [key]: false }));
-        }
-    };
-
     if (profileLoading) {
         return <div className="sidebar"><p>Loading profile...</p></div>;
     }
@@ -136,7 +119,7 @@ const Sidebar = () => {
         <div className="followers">
             <h3>Followers</h3>
             {!followers.length && <p>No followers yet</p>}
-            {followers.map((user) => (
+            {followers.slice(0, 4).map((user) => (
                 <div className="userInfo" key={user._id}>
                     <img src={user.profile_image} alt={user.name} />
                     <div className="infoText">
@@ -153,47 +136,12 @@ const Sidebar = () => {
                     </button>
                 </div>
             ))}
-        </div>
-        <div className="requests">
-            <h3>Follow Requests</h3>
-            {!followRequests.length && <p>No pending requests</p>}
-            {followRequests.map((user) => {
-                const acceptKey = `${user.userName}-accept`;
-                const rejectKey = `${user.userName}-reject`;
-
-                return (
-                    <div className="userInfo requestCard" key={user._id}>
-                        <img src={user.profile_image} alt={user.name} />
-                        <div className="infoText">
-                            <p>{user.name}</p>
-                            <p>@{user.userName}</p>
-                        </div>
-                        <div className="requestActions">
-                            <button
-                                type="button"
-                                className="requestBtn accept"
-                                onClick={() => onRequestAction(user.userName, "accept")}
-                                disabled={requestLoading[acceptKey] || requestLoading[rejectKey]}
-                            >
-                                {requestLoading[acceptKey] ? "..." : "Accept"}
-                            </button>
-                            <button
-                                type="button"
-                                className="requestBtn reject"
-                                onClick={() => onRequestAction(user.userName, "reject")}
-                                disabled={requestLoading[acceptKey] || requestLoading[rejectKey]}
-                            >
-                                {requestLoading[rejectKey] ? "..." : "Reject"}
-                            </button>
-                        </div>
-                    </div>
-                );
-            })}
+            {followers.length > 4 && <p>{followers.length - 4} more followers...</p>}
         </div>
         <div className="otherUsers">
             <h3>Other Person</h3>
             {!otherUsers.length && <p>No users found</p>}
-            {otherUsers.map((user) => (
+            {otherUsers.slice(0, 4).map((user) => (
                 <div className="userInfo" key={user._id}>
                     <img src={user.profile_image} alt={user.name} />
                     <div className="infoText">
@@ -210,6 +158,7 @@ const Sidebar = () => {
                     </button>
                 </div>
             ))}
+                        {otherUsers.length > 4 && <p>{otherUsers.length - 4} more users...</p>}
         </div>
     </div>
   )

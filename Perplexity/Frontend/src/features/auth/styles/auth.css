@@ -1,0 +1,59 @@
+@layer components {
+  .auth-page {
+    @apply grid min-h-screen place-items-center px-5 py-8 text-slate-200;
+    background:
+      radial-gradient(circle at 10% 12%, rgba(56, 189, 248, 0.12), transparent 35%),
+      radial-gradient(circle at 88% 9%, rgba(16, 185, 129, 0.10), transparent 38%),
+      linear-gradient(180deg, #030712 0%, #0b1220 55%, #0f172a 100%);
+  }
+
+  .auth-card {
+    @apply mx-auto w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-950/70 p-7 backdrop-blur-sm transition-all duration-300 ease-out;
+    box-shadow: 0 24px 58px rgba(2, 6, 23, 0.55);
+    animation: authFadeInUp 0.36s ease-out;
+  }
+
+  .auth-title {
+    @apply text-3xl font-semibold tracking-tight text-slate-50;
+  }
+
+  .auth-subtitle {
+    @apply mt-1.5 mb-6 text-sm text-slate-400;
+  }
+
+  .auth-form {
+    @apply space-y-4;
+  }
+
+  .auth-label {
+    @apply block text-sm text-slate-300;
+  }
+
+  .auth-input {
+    @apply mt-2 w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-3.5 py-2.5 text-slate-100 placeholder:text-slate-500 outline-none transition duration-200 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20;
+  }
+
+  .auth-submit-btn {
+    @apply w-full rounded-xl bg-linear-to-r from-cyan-400 to-teal-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition duration-200 hover:-translate-y-0.5 hover:brightness-105;
+  }
+
+  .auth-footnote {
+    @apply mt-4 text-center text-sm text-slate-400;
+  }
+
+  .auth-link {
+    @apply font-medium text-cyan-300 transition hover:text-cyan-200;
+  }
+}
+
+@keyframes authFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

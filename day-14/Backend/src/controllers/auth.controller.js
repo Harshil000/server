@@ -41,7 +41,7 @@ async function registerController(req, res) {
     })
 
     const token = jwt.sign({ id: createdUser._id, email: createdUser.email, userName: createdUser.userName }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' })
-    res.cookie('jwt_token', token)
+    res.cookie('jwt_token', token , {httpOnly: true})
     res.status(201).json({ msg: "user registered successfully", user: { name, userName, email, bio, profile_image: createdUser.profile_image }, token })
 }
 

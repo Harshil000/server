@@ -49,8 +49,15 @@ const Dashboard = () => {
   };
 
   const handleSendMessage = async (messageText, files = []) => {
-    const activeID = urlChatID || chat.currentChatID;
-    const result = await chat.sendMessageHandler(messageText, activeID, files);
+    let targetChatID = urlChatID || chat.currentChatID;
+    let targetFiles = files;
+
+    if (!Array.isArray(files) && (typeof files === "string" || files === null)) {
+      targetChatID = files;
+      targetFiles = [];
+    }
+
+    const result = await chat.sendMessageHandler(messageText, targetChatID, targetFiles);
     if (result && result.chatID && result.chatID !== urlChatID) {
       navigate(`/${result.chatID}`);
     }

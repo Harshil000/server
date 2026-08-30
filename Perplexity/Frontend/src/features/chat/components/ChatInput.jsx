@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowUp, Globe, Paperclip, Sparkles, Loader2, X, FileText, Image as ImageIcon, FileCode } from "lucide-react";
+import { ArrowUp, Paperclip, Loader2, X, FileText, Image as ImageIcon, FileCode } from "lucide-react";
 
 const ChatInput = ({ onSend, loading, placeholder = "Ask anything..." }) => {
   const [prompt, setPrompt] = useState("");

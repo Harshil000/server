@@ -49,13 +49,21 @@ const useChat = () => {
         try {
             dispatch(setLoading(true));
 
+            let targetChatID = chatID;
+            let targetFiles = files;
+
+            if (Array.isArray(chatID)) {
+                targetFiles = chatID;
+                targetChatID = currentChatID;
+            }
+
             let accumulativeText = "";
             let chatTitle = "Untitled Chat";
-            let activeChatID = chatID;
+            let activeChatID = targetChatID;
             let chatInitialized = false;
 
             // Delegate stream reading and SSE parsing to chat.service.js
-            await sendMessageStream(message, chatID, files, (data) => {
+            await sendMessageStream(message, targetChatID, targetFiles, (data) => {
                 if (data.type === "init") {
                     chatTitle = data.title || chatTitle;
                     activeChatID = data.chatID || activeChatID;

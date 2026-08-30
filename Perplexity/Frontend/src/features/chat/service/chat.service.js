@@ -29,23 +29,40 @@ export const getMessages = async (chatId) => {
  */
 export const sendMessageStream = async (message, chatID, files = [], onEvent) => {
     try {
+        let actualChatID = chatID;
         let actualFiles = files;
         let actualOnEvent = onEvent;
+
+        // If 3rd parameter is the callback: sendMessageStream(message, chatID, onEvent)
         if (typeof files === "function") {
             actualOnEvent = files;
             actualFiles = [];
+        }
+
+        // If 2nd parameter is the callback: sendMessageStream(message, onEvent)
+        if (typeof chatID === "function") {
+            actualOnEvent = chatID;
+            actualChatID = null;
+            actualFiles = [];
+        } else if (Array.isArray(chatID)) {
+            // If 2nd parameter is files array: sendMessageStream(message, files, onEvent)
+            actualFiles = chatID;
+            actualChatID = null;
+            if (typeof files === "function") {
+                actualOnEvent = files;
+            }
         }
 
         let payload;
         if (actualFiles && actualFiles.length > 0) {
             payload = new FormData();
             payload.append("message", message || "");
-            if (chatID) payload.append("chatID", chatID);
+            if (actualChatID) payload.append("chatID", actualChatID);
             actualFiles.forEach((file) => {
                 payload.append("files", file);
             });
         } else {
-            payload = { message, chatID };
+            payload = { message, chatID: actualChatID };
         }
 
         let lastIndex = 0;
